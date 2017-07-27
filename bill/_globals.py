@@ -2,7 +2,7 @@ static_data = [
 	"PV Consumption Bill",
 	"1. Bill Summary",
 	"ASCO World, Forrest field",
-	"80021807299",
+	"8002180729",
 	"413000895",
 	"1/1/2017 to 31/1/2017",
 	"31",

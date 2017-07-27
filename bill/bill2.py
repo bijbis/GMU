@@ -64,14 +64,14 @@ def put_export_data(each):
 # ############################################################
 temp_bill = []
 temp_dates = []
-with open('NEM12_8002180729_01-MAY-16-06-JUN-17.csv', 'r') as billCSV:
+with open('NMI - 8002180729.csv', 'r') as billCSV:
 	data = csv.reader(billCSV)
 	takeValues = False
 	for each in data:
 		if each[0] == '100':
 			continue
 		elif each[0] == '200':
-			if each[7] == 'KWH':
+			if each[7].upper() == 'KWH':
 				takeValues = True
 				if each[4] == 'B1':
 					ty = 'export'
@@ -100,7 +100,7 @@ billData['weekend'] = billData.apply(lambda row: label_weekday(row), axis=1)
 # import_data = billData[billData['Import_Export'] == 'import']
 export_data = billData[billData['Import_Export'] == 'export']
 # print(import_data.shape)
-export_data = export_data[(export_data.index >= '2017/05/03') & (export_data.index <= '2017/05/31')]
+export_data = export_data[(export_data.index >= '2017/05/23') & (export_data.index <= '2017/06/26')]
 # import_data = import_data[(import_data.index >= '2017/05/03') & (import_data.index <= '2017/05/16')]
 # export_tariff = export_data.apply(lambda row: get_tariff_on_date_export(row), axis=1)
 # import_tariff = import_data.apply(lambda row: get_tariff_on_date_import(row), axis=1)
@@ -116,11 +116,13 @@ export_data = export_data[(export_data.index >= '2017/05/03') & (export_data.ind
 # print(tarrif2)
 # #######  Calculation of number of days for the bill ################
 dfb = export_data.index.values[-1] - export_data.index.values[0]
-days_for_bill = dfb.astype('timedelta64[D]') / np.timedelta64(1, 'D')
+# print(dfb.astype('timedelta64[D]'))
+days_for_bill = (dfb.astype('timedelta64[D]') + 1) / np.timedelta64(1, 'D')
+print(days_for_bill)
 # ####################################################################
 
 client = InfluxDBClient('35.166.113.128', 8086, 'root', 'root', 'ascco_world')
-row = client.query("SELECT * FROM energy_consumption WHERE time >= '2017-05-03' AND time < '2017-05-31'")
+row = client.query("SELECT * FROM energy_consumption WHERE time >= '2017-05-23' AND time <= '2017-06-27'")
 pv_data = pd.DataFrame.from_dict(list(row)[0]).drop(['ac_time', 'host', 'region'], axis=1)
 pv_data['time'] = pd.to_datetime(pv_data.time) + pd.DateOffset(hours=8)
 pv_data['weekend'] = pv_data.time.dt.dayofweek.isin([5, 6])
@@ -129,7 +131,7 @@ pv_data_half_hourly = pv_data.dropna().reset_index().drop('index', axis=1)
 pv_data_half_hourly['generated_energy'] = pv_data_half_hourly.total_energy.diff(1)
 pv_data_half_hourly.dropna(inplace=True)
 pv_data_half_hourly['local_time'] = pv_data_half_hourly.apply(round_off_time, axis=1)
-pv_data_half_hourly = pv_data_half_hourly[(pv_data_half_hourly.time >= '2017/05/03') & (pv_data_half_hourly.time <= '2017/05/31')]
+pv_data_half_hourly = pv_data_half_hourly[(pv_data_half_hourly.time >= '2017/05/23') & (pv_data_half_hourly.time <= '2017/06/27')]
 report_data = pv_data_half_hourly.drop(['weekend'], axis=1)
 cols = ['time', 'local_time', 'total_energy', 'generated_energy', 'exported_energy (kwh)', 'consumed_unit']
 report_data = report_data.loc[:, cols]
@@ -157,7 +159,8 @@ Quantity[0] = '%.2f' % (off_peak_energy) + " kWH"
 Quantity[1] = '%.2f' % (peak_energy) + " kWH"
 Quantity[2] = str(int(days_for_bill)) + " day(s)"
 ts1 = pd.to_datetime(str(export_data.index.values[0]))
-ts2 = pd.to_datetime(str(export_data.index.values[-1])) - pd.DateOffset(1)
+ts2 = pd.to_datetime(str(export_data.index.values[-1]))
+print(ts2)
 static_data[5] = ts1.strftime('%d/%m/%Y') + " to " + ts2.strftime('%d/%m/%Y')
 static_data[6] = str(int(days_for_bill)) + " day(s)"
 static_data[7] = '%.2f' % (peak_energy + off_peak_energy) + " kWH"
@@ -177,6 +180,8 @@ static_data_right[2] = '$' + '%.2f' % (float(Amount[5].split('$')[-1]) / int(day
 static_data_right[3] = '%.2f' % ((peak_energy + off_peak_energy) / int(days_for_bill)) + " kWH"
 mi = int(static_data[5].split('to')[0].split('/')[1])
 month = '_' + date(1900, mi, 1).strftime('%B') + static_data[5].split('to')[0].split('/')[2]
+# print(static_data[5])
+
 create_pdf(current_month=month.strip(), fileName='bill_ASCO')
 report_data = report_data.drop(['time'], axis=1)
 report_data.to_csv('May2017.csv')

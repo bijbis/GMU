@@ -6,9 +6,6 @@ from influxdb import InfluxDBClient
 from abc import ABC
 from abc import abstractmethod
 from SeriesHelper import RemoteMonitor
-# from consumer import database
-
-# import socket
 
 
 class Database(ABC):
@@ -57,21 +54,10 @@ class Influx(Database):
             raise AttributeError('Wrong instantiation of database class')
         Influx.db = InfluxDBClient(self.host, self.port, user, passcode, dbname)
         Influx.db.create_database(dbname)
-        # self.db.write_points()
         # // TODO replace with logging
         print("Created database '{0}' at http://{1} named '{2}'".format(self.get_database, self.host, dbname))
 
-    # Implementation of abstract method
-    # def write_points(**kwargs):
-    #     print(kwargs)
-
     def write(self, cols, data):
-        for each in data:
-            raw_data = dict(zip(cols, each))
-            RemoteMonitor(host='test_oztron', **raw_data)
+        raw_data = dict(zip(cols, data))
+        RemoteMonitor(host='test_oztron', **raw_data)
         RemoteMonitor.commit()
-
-# if __name__ == '__main__':
-#     db = Influx(database='influxDB', user='root', passcode='root', dbname='test',
-#                 port=8086, host='localhost')
-#     # db.resolve_host()
