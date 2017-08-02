@@ -56,10 +56,11 @@ class ProducerThread(threading.Thread):
                 plc_power = hotlink.Hotlink('http://203.59.95.40:9080/HOSTLINK/RVIY*')
                 item_plc_monitor.append(plc_power.data * 0.00001)
             except struct.error:
-                continue
+                print('Struct Error exception', file=sys.stderr)
+                os._exit(1)
             except ModbusException:
                 print('Modbus I/O exception', file=sys.stderr)
                 os._exit(1)
             self.q[0].put(item_remote_monitor)
             self.q[1].put(item_plc_monitor)
-            time.sleep(4)
+            time.sleep(60)

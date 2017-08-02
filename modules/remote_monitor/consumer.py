@@ -20,4 +20,4 @@ class ConsumerThread(threading.Thread):
                 item_plc_monitor = self.q[1].get()
                 self.database.write(self.columns[0], item_remote_monitor, 'remote')
                 self.database.write(self.columns[1], item_plc_monitor, 'plc')
-                time.sleep(10)
+                time.sleep(75)
