@@ -21,7 +21,8 @@ class ProducerThread(threading.Thread):
         # modbus = Modbus.Modbus('paulharrison.hopto.org')
         modbus = Modbus.Modbus('203.59.95.40')
         while True:
-            item = []
+            item_remote_monitor = []
+            item_plc_monitor = []
             try:
                 # Order: [current, power, voltage]
                 # current_avg = modbus.read(3008, 2)  # 3008 stores average current
@@ -37,21 +38,28 @@ class ProducerThread(threading.Thread):
                 vol_AC = modbus.read(40083, 2, device='GMU')
                 vol_Avg = (vol_AB + vol_BC + vol_AC) / 3.0
                 power = modbus.read(40091, n=2, device='GMU', scalar=0.001)
-                item.append(cur_A)
-                item.append(cur_B)
-                item.append(cur_C)
-                item.append(cur_Avg)
-                item.append(vol_AB)
-                item.append(vol_BC)
-                item.append(vol_AC)
-                item.append(vol_Avg)
-                item.append(power)
-                hlink = hotlink.Hotlink('http://203.59.95.40:9080/HOSTLINK/RVIY*')
-                item.append(hlink.data)
+                item_remote_monitor.append(cur_A)
+                item_remote_monitor.append(cur_B)
+                item_remote_monitor.append(cur_C)
+                item_remote_monitor.append(cur_Avg)
+                item_remote_monitor.append(vol_AB)
+                item_remote_monitor.append(vol_BC)
+                item_remote_monitor.append(vol_AC)
+                item_remote_monitor.append(vol_Avg)
+                item_remote_monitor.append(power)
+                battery_voltage = hotlink.Hotlink('http://203.59.95.40:9080/HOSTLINK/RVIZ*')
+                item_plc_monitor.append(battery_voltage.data * 0.001)
+                plc_voltage = hotlink.Hotlink('http://203.59.95.40:9080/HOSTLINK/RVIX*')
+                item_plc_monitor.append(plc_voltage.data * 0.001)
+                charging_current = hotlink.Hotlink('http://203.59.95.40:9080/HOSTLINK/RVIL*')
+                item_plc_monitor.append(charging_current.data * 0.001)
+                plc_power = hotlink.Hotlink('http://203.59.95.40:9080/HOSTLINK/RVIY*')
+                item_plc_monitor.append(plc_power.data * 0.00001)
             except struct.error:
                 continue
             except ModbusException:
                 print('Modbus I/O exception', file=sys.stderr)
                 os._exit(1)
-            self.q.put(item)
+            self.q[0].put(item_remote_monitor)
+            self.q[1].put(item_plc_monitor)
             time.sleep(4)

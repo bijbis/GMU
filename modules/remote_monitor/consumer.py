@@ -15,7 +15,9 @@ class ConsumerThread(threading.Thread):
 
     def run(self):
         while True:
-            if not self.q.empty():
-                item = self.q.get()
-                self.database.write(self.columns, item)
+            if not self.q[0].empty() and not self.q[1].empty():
+                item_remote_monitor = self.q[0].get()
+                item_plc_monitor = self.q[1].get()
+                self.database.write(self.columns[0], item_remote_monitor, 'remote')
+                self.database.write(self.columns[1], item_plc_monitor, 'plc')
                 time.sleep(10)

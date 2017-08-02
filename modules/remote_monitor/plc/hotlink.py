@@ -8,7 +8,7 @@ class Hotlink:
         self._data = self.decode(url_data)
 
     def decode(self, url_data):
-        return int(url_data.decode("utf-8").split('RVI')[1].split('*')[0], 16) * 0.00001
+        return int(url_data.decode("utf-8").split('RVI')[1].split('*')[0], 16)
 
     @property
     def data(self):

@@ -5,7 +5,7 @@ data into the influxdb database server
 from influxdb import InfluxDBClient
 from abc import ABC
 from abc import abstractmethod
-from SeriesHelper import RemoteMonitor
+from SeriesHelper import RemoteMonitor, PlcMonitor
 
 
 class Database(ABC):
@@ -38,7 +38,7 @@ class Database(ABC):
         return False
 
     @abstractmethod
-    def write(self, cols, data):
+    def write(self, cols, data, where):
         """
         Creating the database in the derived class
         """
@@ -57,7 +57,11 @@ class Influx(Database):
         # // TODO replace with logging
         print("Created database '{0}' at http://{1} named '{2}'".format(self.get_database, self.host, dbname))
 
-    def write(self, cols, data):
+    def write(self, cols, data, where):
         raw_data = dict(zip(cols, data))
-        RemoteMonitor(host='test_oztron', **raw_data)
-        RemoteMonitor.commit()
+        if where == 'remote':
+            RemoteMonitor(host='test_oztron', **raw_data)
+            RemoteMonitor.commit()
+        elif where == 'plc':
+            PlcMonitor(host='test_oztron', **raw_data)
+            PlcMonitor.commit()
