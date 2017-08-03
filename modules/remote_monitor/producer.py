@@ -49,12 +49,12 @@ class ProducerThread(threading.Thread):
                 item_remote_monitor.append(power)
                 battery_voltage = hotlink.Hotlink('http://203.59.95.40:9080/HOSTLINK/RVIZ*')
                 item_plc_monitor.append(battery_voltage.data * 0.001)
-                plc_voltage = hotlink.Hotlink('http://203.59.95.40:9080/HOSTLINK/RVIX*')
-                item_plc_monitor.append(plc_voltage.data * 0.001)
-                charging_current = hotlink.Hotlink('http://203.59.95.40:9080/HOSTLINK/RVIL*')
+                pv_voltage = hotlink.Hotlink('http://203.59.95.40:9080/HOSTLINK/RVIX*') # renamed variable plc_voltage to pv_voltage
+                item_plc_monitor.append(pv_voltage.data * 0.001)
+                charging_current = hotlink.Hotlink('http://203.59.95.40:9080/HOSTLINK/RVIW*') # corrected RVIL to RVIW
                 item_plc_monitor.append(charging_current.data * 0.001)
-                plc_power = hotlink.Hotlink('http://203.59.95.40:9080/HOSTLINK/RVIY*')
-                item_plc_monitor.append(plc_power.data * 0.00001)
+                pv_power = hotlink.Hotlink('http://203.59.95.40:9080/HOSTLINK/RVIY*') # renamed variable plc_power to pv_power
+                item_plc_monitor.append(pv_power.data * 0.00001)
             except struct.error:
                 print('Struct Error exception', file=sys.stderr)
                 os._exit(1)
