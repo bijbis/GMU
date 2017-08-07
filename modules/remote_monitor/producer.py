@@ -61,6 +61,9 @@ class ProducerThread(threading.Thread):
             except ModbusException:
                 print('Modbus I/O exception', file=sys.stderr)
                 os._exit(1)
+            except:
+                print('Exception', file=sys.stderr)
+                os._exit(1)
             self.q[0].put(item_remote_monitor)
             self.q[1].put(item_plc_monitor)
             time.sleep(60)
